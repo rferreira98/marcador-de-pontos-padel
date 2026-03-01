@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="pt">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Marcador Padel</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #1a1a1a;
+        color: #fff;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 16px;
+      }
+      .setup,
+      .match {
+        display: none;
+      }
+      .setup.active,
+      .match.active {
+        display: block;
+      }
+      input,
+      select,
+      button {
+        width: 100%;
+        padding: 14px;
+        margin: 8px 0;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+      }
+      input,
+      select {
+        background: #2a2a2a;
+        color: #fff;
+      }
+      button {
+        background: #00a86b;
+        color: #fff;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      button:active {
+        opacity: 0.8;
+      }
+      .score-board {
+        background: #2a2a2a;
+        border-radius: 12px;
+        padding: 20px;
+        margin: 16px 0;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .team {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px;
+        border-radius: 8px;
+        background: #1f1f1f;
+      }
+      .team:first-child {
+        border-left: 4px solid #00a86b;
+      }
+      .team:last-child {
+        border-left: 4px solid #ff6b6b;
+      }
+      .team-name {
+        flex: 1;
+        font-size: 18px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .serve-indicator {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #00a86b;
+      }
+      .scores {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+      .score {
+        min-width: 50px;
+        text-align: center;
+        font-size: 24px;
+        font-weight: 700;
+      }
+      .btn-group {
+        display: flex;
+        gap: 8px;
+        margin: 16px 0;
+      }
+      .btn-group button {
+        flex: 1;
+      }
+      .btn-secondary {
+        background: #444 !important;
+      }
+      .sets {
+        display: flex;
+        gap: 8px;
+        font-size: 18px;
+        align-items: center;
+      }
+      .game-score {
+        font-size: 32px;
+        color: #00a86b;
+      }
+      h2 {
+        margin: 16px 0 8px;
+        font-size: 14px;
+        color: #888;
+        text-transform: uppercase;
+      }
+      .label {
+        font-size: 12px;
+        color: #888;
+        margin-bottom: 4px;
+      }
+      .player-inputs {
+        display: flex;
+        gap: 8px;
+      }
+      .player-inputs input {
+        margin: 0;
+      }
+      .round-label {
+        text-align: center;
+        font-size: 14px;
+        color: #888;
+        margin-bottom: 8px;
+      }
+      .tournament-label {
+        text-align: center;
+        font-size: 16px;
+        font-weight: 600;
+        color: #fff;
+        margin-bottom: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="setup active">
+        <h1>Novo Jogo</h1>
+        <div class="label">Torneio (opcional)</div>
+        <input type="text" id="tournament" placeholder="Ex: Torneio de Verão 2024" />
+        <div class="label">Ronda (opcional)</div>
+        <input type="text" id="round" placeholder="Ex: M1 - Semi-final 1" />
+        <div class="label">Equipa 1</div>
+        <div class="player-inputs">
+          <input type="text" id="t1p1" placeholder="Jogador 1" />
+          <input type="text" id="t1p2" placeholder="Jogador 2" />
+        </div>
+        <div class="label">Equipa 2</div>
+        <div class="player-inputs">
+          <input type="text" id="t2p1" placeholder="Jogador 3" />
+          <input type="text" id="t2p2" placeholder="Jogador 4" />
+        </div>
+        <div class="label">Formato</div>
+        <select id="format">
+          <option value="super">3 Sets com Super Tie-break</option>
+          <option value="regular">3 Sets Regular</option>
+        </select>
+        <div class="label">Regra de Igualdade</div>
+        <select id="deuce">
+          <option value="advantage">Vantagens</option>
+          <option value="golden">Ponto de Ouro</option>
+          <option value="star">
+            Ponto Estrela (2 igualdades + ponto de ouro)
+          </option>
+        </select>
+        <div class="label">Primeiro Serviço</div>
+        <select id="serve">
+          <option value="1">Equipa 1</option>
+          <option value="2">Equipa 2</option>
+        </select>
+        <button onclick="startMatch()">Iniciar Jogo</button>
+      </div>
+
+      <div class="match">
+        <div class="tournament-label" id="tournamentLabel"></div>
+        <div class="round-label" id="roundLabel"></div>
+        <div class="score-board">
+          <div class="team">
+            <div class="team-name" id="t1name">Team 1</div>
+            <div class="scores">
+              <div class="sets" id="t1sets"></div>
+              <div class="game-score" id="t1game">0</div>
+            </div>
+          </div>
+          <div class="team">
+            <div class="team-name" id="t2name">Team 2</div>
+            <div class="scores">
+              <div class="sets" id="t2sets"></div>
+              <div class="game-score" id="t2game">0</div>
+            </div>
+          </div>
+        </div>
+        <div class="btn-group">
+          <button onclick="point(1)">Ponto Equipa 1</button>
+          <button onclick="point(2)">Ponto Equipa 2</button>
+        </div>
+        <div class="btn-group">
+          <button class="btn-secondary" onclick="undo()">Anular</button>
+          <button class="btn-secondary" onclick="newMatch()">Novo Jogo</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let state = {
+        t1: [0, 0, 0],
+        t2: [0, 0, 0],
+        g1: 0,
+        g2: 0,
+        set: 0,
+        format: "super",
+        deuce: "advantage",
+        deuceCount: 0,
+        serve: 1,
+        history: [],
+        matchEnded: false,
+      };
+
+      function startMatch() {
+        const t1 =
+          [
+            document.getElementById("t1p1").value,
+            document.getElementById("t1p2").value,
+          ]
+            .filter((p) => p)
+            .join(" / ") || "Equipa 1";
+        const t2 =
+          [
+            document.getElementById("t2p1").value,
+            document.getElementById("t2p2").value,
+          ]
+            .filter((p) => p)
+            .join(" / ") || "Equipa 2";
+        const round = document.getElementById("round").value;
+        const tournament = document.getElementById("tournament").value;
+        
+        localStorage.setItem('tournament', tournament);
+        localStorage.setItem('round', round);
+        
+        state = {
+          t1: [0, 0, 0],
+          t2: [0, 0, 0],
+          g1: 0,
+          g2: 0,
+          set: 0,
+          format: document.getElementById("format").value,
+          deuce: document.getElementById("deuce").value,
+          deuceCount: 0,
+          serve: parseInt(document.getElementById("serve").value),
+          history: [],
+          t1name: t1,
+          t2name: t2,
+          round: round,
+          tournament: tournament,
+          matchEnded: false,
+        };
+        document.getElementById("t1name").textContent = t1;
+        document.getElementById("t2name").textContent = t2;
+        document.getElementById("tournamentLabel").textContent = tournament;
+        document.getElementById("tournamentLabel").style.display = tournament ? "block" : "none";
+        document.getElementById("roundLabel").textContent = round;
+        document.getElementById("roundLabel").style.display = round ? "block" : "none";
+        document.querySelector(".setup").classList.remove("active");
+        document.querySelector(".match").classList.add("active");
+        render();
+      }
+
+      function newMatch() {
+        document.getElementById("t1p1").value = "";
+        document.getElementById("t1p2").value = "";
+        document.getElementById("t2p1").value = "";
+        document.getElementById("t2p2").value = "";
+        document.querySelector(".match").classList.remove("active");
+        document.querySelector(".setup").classList.add("active");
+      }
+      
+      window.addEventListener('DOMContentLoaded', () => {
+        const savedTournament = localStorage.getItem('tournament');
+        const savedRound = localStorage.getItem('round');
+        if (savedTournament) document.getElementById('tournament').value = savedTournament;
+        if (savedRound) document.getElementById('round').value = savedRound;
+      });
+
+      function point(team) {
+        if (state.matchEnded) return;
+        if (state.history.length > 100) state.history = state.history.slice(-50);
+        state.history.push({
+          t1: [...state.t1],
+          t2: [...state.t2],
+          g1: state.g1,
+          g2: state.g2,
+          set: state.set,
+          serve: state.serve,
+          deuceCount: state.deuceCount,
+          matchEnded: state.matchEnded
+        });
+        const isTiebreak =
+          (state.set === 2 && state.format === "super") ||
+          (state.t1[state.set] === 6 && state.t2[state.set] === 6);
+
+        if (isTiebreak) {
+          team === 1 ? state.g1++ : state.g2++;
+          const target = state.set === 2 && state.format === "super" ? 10 : 7;
+          if (
+            (state.g1 >= target || state.g2 >= target) &&
+            Math.abs(state.g1 - state.g2) >= 2
+          ) {
+            if (state.set === 2 && state.format === "super") {
+              state.t1[state.set] = state.g1;
+              state.t2[state.set] = state.g2;
+            } else {
+              state.t1[state.set] = state.g1 > state.g2 ? 7 : 6;
+              state.t2[state.set] = state.g2 > state.g1 ? 7 : 6;
+            }
+            state.serve = state.serve === 1 ? 2 : 1;
+            checkMatchEnd();
+          }
+          if ((state.g1 + state.g2) % 2 === 1)
+            state.serve = state.serve === 1 ? 2 : 1;
+        } else {
+          team === 1 ? state.g1++ : state.g2++;
+          const pts = [0, 15, 30, 40];
+
+          if (state.g1 >= 4 || state.g2 >= 4) {
+            if (state.g1 === state.g2) {
+              state.deuceCount++;
+            }
+
+            if (state.deuce === "advantage") {
+              if (Math.abs(state.g1 - state.g2) >= 2) {
+                winGame(team);
+              }
+            } else if (state.deuce === "golden") {
+              if (state.g1 === 4 && state.g2 === 4) {
+                winGame(team);
+              } else if (Math.abs(state.g1 - state.g2) >= 2) {
+                winGame(team);
+              }
+            } else if (state.deuce === "star") {
+              if (state.deuceCount >= 2 && state.g1 === state.g2) {
+                winGame(team);
+              } else if (Math.abs(state.g1 - state.g2) >= 2) {
+                winGame(team);
+              }
+            }
+          }
+        }
+        render();
+      }
+
+      function winGame(team) {
+        team === 1 ? state.t1[state.set]++ : state.t2[state.set]++;
+        state.g1 = state.g2 = 0;
+        state.deuceCount = 0;
+        state.serve = state.serve === 1 ? 2 : 1;
+
+        if (
+          (state.t1[state.set] >= 6 || state.t2[state.set] >= 6) &&
+          Math.abs(state.t1[state.set] - state.t2[state.set]) >= 2
+        ) {
+          checkMatchEnd();
+        }
+      }
+
+      function checkMatchEnd() {
+        const s1 = state.t1.filter(
+          (s) => s > state.t2[state.t1.indexOf(s)],
+        ).length;
+        const s2 = state.t2.filter(
+          (s) => s > state.t1[state.t2.indexOf(s)],
+        ).length;
+
+        if (s1 === 2 || s2 === 2) {
+          state.matchEnded = true;
+          alert(
+            `${s1 === 2 ? document.getElementById("t1name").textContent : document.getElementById("t2name").textContent} venceu!`,
+          );
+        } else {
+          state.set++;
+          state.g1 = state.g2 = 0;
+        }
+      }
+
+      function undo() {
+        if (state.history.length) {
+          const prev = state.history.pop();
+          state.t1 = prev.t1;
+          state.t2 = prev.t2;
+          state.g1 = prev.g1;
+          state.g2 = prev.g2;
+          state.set = prev.set;
+          state.serve = prev.serve;
+          state.deuceCount = prev.deuceCount;
+          state.matchEnded = prev.matchEnded;
+          render();
+        }
+      }
+
+      function render() {
+        const isTiebreak =
+          (state.set === 2 && state.format === "super") ||
+          (state.t1[state.set] === 6 && state.t2[state.set] === 6);
+        const pts = [0, 15, 30, 40];
+
+        let g1 = isTiebreak
+          ? state.g1
+          : state.g1 < 4
+            ? pts[state.g1]
+            : state.g1 === state.g2
+              ? "40"
+              : state.g1 > state.g2
+                ? "AD"
+                : "40";
+        let g2 = isTiebreak
+          ? state.g2
+          : state.g2 < 4
+            ? pts[state.g2]
+            : state.g1 === state.g2
+              ? "40"
+              : state.g2 > state.g1
+                ? "AD"
+                : "40";
+
+        document.getElementById("t1game").textContent = g1;
+        document.getElementById("t2game").textContent = g2;
+        document.getElementById("t1sets").innerHTML = state.t1
+          .slice(0, state.set + 1)
+          .map((s) => `<div class="score">${s}</div>`)
+          .join("");
+        document.getElementById("t2sets").innerHTML = state.t2
+          .slice(0, state.set + 1)
+          .map((s) => `<div class="score">${s}</div>`)
+          .join("");
+        document.getElementById("t1name").innerHTML =
+          state.t1name +
+          (state.serve === 1 ? ' <div class="serve-indicator"></div>' : "");
+        document.getElementById("t2name").innerHTML =
+          state.t2name +
+          (state.serve === 2 ? ' <div class="serve-indicator"></div>' : "");
+        
+        const pointBtns = document.querySelectorAll('.btn-group:first-of-type button');
+        pointBtns.forEach(btn => btn.disabled = state.matchEnded);
+      }
+    </script>
+  </body>
+</html>
