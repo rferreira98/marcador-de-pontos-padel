@@ -285,6 +285,7 @@
         document.querySelector(".setup").classList.remove("active");
         document.querySelector(".match").classList.add("active");
         render();
+        localStorage.setItem('matchState', JSON.stringify(state));
       }
 
       function newMatch() {
@@ -368,6 +369,7 @@
           }
         }
         render();
+        localStorage.setItem('matchState', JSON.stringify(state));
       }
 
       function winGame(team) {
@@ -415,6 +417,7 @@
           state.deuceCount = prev.deuceCount;
           state.matchEnded = prev.matchEnded;
           render();
+          localStorage.setItem('matchState', JSON.stringify(state));
         }
       }
 
@@ -462,6 +465,7 @@
         
         const pointBtns = document.querySelectorAll('.btn-group:first-of-type button');
         pointBtns.forEach(btn => btn.disabled = state.matchEnded);
+        localStorage.setItem('matchState', JSON.stringify(state));
       }
     </script>
   </body>

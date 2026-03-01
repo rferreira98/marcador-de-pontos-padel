@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Placar - Display</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+            background: #f5f5f5; 
+            color: #1a1a1a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 40px;
+        }
+        .display-container { 
+            width: 100%; 
+            max-width: 1400px;
+        }
+        .tournament { 
+            text-align: center; 
+            font-size: 3em; 
+            font-weight: 700; 
+            margin-bottom: 20px;
+            color: #1a1a1a;
+        }
+        .round { 
+            text-align: center; 
+            font-size: 2em; 
+            color: #666; 
+            margin-bottom: 60px;
+        }
+        .scoreboard {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f8f8 100%);
+            border-radius: 24px;
+            padding: 60px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+        }
+        .team-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 40px;
+            margin: 20px 0;
+            border-radius: 16px;
+            background: #ffffff;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .team-row:first-child {
+            border-left: 8px solid #4ade80;
+        }
+        .team-row:last-child {
+            border-left: 8px solid #fb7185;
+        }
+        .team-info {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            flex: 1;
+        }
+        .team-name {
+            font-size: 3.5em;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+        .serve-dot {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #4ade80;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        .scores-display {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+        }
+        .set-scores {
+            display: flex;
+            gap: 20px;
+        }
+        .set-score {
+            font-size: 3em;
+            font-weight: 700;
+            min-width: 70px;
+            text-align: center;
+            padding: 10px 20px;
+            background: #f0f0f0;
+            border-radius: 12px;
+            color: #1a1a1a;
+        }
+        .game-score {
+            font-size: 5em;
+            font-weight: 900;
+            color: #4ade80;
+            min-width: 150px;
+            text-align: center;
+        }
+        .no-match {
+            text-align: center;
+            font-size: 2.5em;
+            color: #999;
+            padding: 100px;
+        }
+    </style>
+</head>
+<body>
+    <div class="display-container">
+        <div id="tournament" class="tournament"></div>
+        <div id="round" class="round"></div>
+        <div class="scoreboard" id="scoreboard">
+            <div class="no-match">Aguardando jogo...</div>
+        </div>
+    </div>
+
+    <script>
+        function updateDisplay() {
+            const stateStr = localStorage.getItem('matchState');
+            if (!stateStr) {
+                document.getElementById('scoreboard').innerHTML = '<div class="no-match">Aguardando jogo...</div>';
+                document.getElementById('tournament').textContent = '';
+                document.getElementById('round').textContent = '';
+                return;
+            }
+
+            const state = JSON.parse(stateStr);
+            const isTiebreak = (state.set === 2 && state.format === 'super') || (state.t1[state.set] === 6 && state.t2[state.set] === 6);
+            const pts = [0, 15, 30, 40];
+
+            let g1 = isTiebreak ? state.g1 : (state.g1 < 4 ? pts[state.g1] : (state.g1 === state.g2 ? '40' : (state.g1 > state.g2 ? 'AD' : '40')));
+            let g2 = isTiebreak ? state.g2 : (state.g2 < 4 ? pts[state.g2] : (state.g1 === state.g2 ? '40' : (state.g2 > state.g1 ? 'AD' : '40')));
+
+            document.getElementById('tournament').textContent = state.tournament || '';
+            document.getElementById('round').textContent = state.round || '';
+
+            const sets1 = state.t1.slice(0, state.set + 1).map(s => `<div class="set-score">${s}</div>`).join('');
+            const sets2 = state.t2.slice(0, state.set + 1).map(s => `<div class="set-score">${s}</div>`).join('');
+
+            document.getElementById('scoreboard').innerHTML = `
+                <div class="team-row">
+                    <div class="team-info">
+                        ${state.serve === 1 ? '<div class="serve-dot"></div>' : '<div style="width:24px"></div>'}
+                        <div class="team-name">${state.t1name}</div>
+                    </div>
+                    <div class="scores-display">
+                        <div class="set-scores">${sets1}</div>
+                        <div class="game-score">${g1}</div>
+                    </div>
+                </div>
+                <div class="team-row">
+                    <div class="team-info">
+                        ${state.serve === 2 ? '<div class="serve-dot"></div>' : '<div style="width:24px"></div>'}
+                        <div class="team-name">${state.t2name}</div>
+                    </div>
+                    <div class="scores-display">
+                        <div class="set-scores">${sets2}</div>
+                        <div class="game-score">${g2}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        window.addEventListener('storage', updateDisplay);
+        setInterval(updateDisplay, 500);
+        updateDisplay();
+    </script>
+</body>
+</html>
