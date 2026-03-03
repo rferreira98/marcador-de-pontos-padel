@@ -121,17 +121,26 @@
         </div>
     </div>
 
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script>
-        function updateDisplay() {
-            const stateStr = localStorage.getItem('matchState');
-            if (!stateStr) {
-                document.getElementById('scoreboard').innerHTML = '<div class="no-match">Aguardando jogo...</div>';
-                document.getElementById('tournament').textContent = '';
-                document.getElementById('round').textContent = '';
-                return;
-            }
+        let currentState = null;
+        const peer = new Peer();
 
-            const state = JSON.parse(stateStr);
+        peer.on('open', id => {
+            document.getElementById('scoreboard').innerHTML = `<div class="no-match">ID: ${id}<br><br>Insira este ID no controlo</div>`;
+        });
+
+        peer.on('connection', conn => {
+            conn.on('data', state => {
+                currentState = state;
+                updateDisplay();
+            });
+        });
+
+        function updateDisplay() {
+            if (!currentState) return;
+
+            const state = currentState;
             const isTiebreak = (state.set === 2 && state.format === 'super') || (state.t1[state.set] === 6 && state.t2[state.set] === 6);
             const pts = [0, 15, 30, 40];
 
@@ -167,10 +176,6 @@
                 </div>
             `;
         }
-
-        window.addEventListener('storage', updateDisplay);
-        setInterval(updateDisplay, 500);
-        updateDisplay();
     </script>
 </body>
 </html>

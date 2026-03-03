@@ -152,6 +152,28 @@
         color: #fff;
         margin-bottom: 4px;
       }
+      .peer-id {
+        background: #2a2a2a;
+        padding: 12px;
+        border-radius: 8px;
+        margin: 8px 0;
+        font-size: 12px;
+        word-break: break-all;
+        color: #888;
+      }
+      .peer-input {
+        display: flex;
+        gap: 8px;
+      }
+      .peer-input input {
+        flex: 1;
+        margin: 0;
+      }
+      .peer-input button {
+        width: auto;
+        padding: 14px 24px;
+        margin: 0;
+      }
     </style>
   </head>
   <body>
@@ -194,6 +216,11 @@
       </div>
 
       <div class="match">
+        <div class="peer-id" id="peerId">A inicializar...</div>
+        <div class="peer-input">
+          <input type="text" id="displayId" placeholder="ID do Display" />
+          <button onclick="connectDisplay()">Ligar</button>
+        </div>
         <div class="tournament-label" id="tournamentLabel"></div>
         <div class="round-label" id="roundLabel"></div>
         <div class="score-board">
@@ -223,7 +250,29 @@
       </div>
     </div>
 
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script>
+      let conn = null;
+      const peer = new Peer();
+
+      peer.on('open', id => {
+        document.getElementById('peerId').textContent = `ID Controlo: ${id}`;
+      });
+
+      function connectDisplay() {
+        const displayId = document.getElementById('displayId').value.trim();
+        if (!displayId) return alert('Insira o ID do display');
+        conn = peer.connect(displayId);
+        conn.on('open', () => {
+          alert('Ligado ao display!');
+          sendState();
+        });
+      }
+
+      function sendState() {
+        if (conn && conn.open) conn.send(state);
+      }
+
       let state = {
         t1: [0, 0, 0],
         t2: [0, 0, 0],
@@ -285,6 +334,7 @@
         document.querySelector(".setup").classList.remove("active");
         document.querySelector(".match").classList.add("active");
         render();
+        sendState();
         localStorage.setItem('matchState', JSON.stringify(state));
       }
 
@@ -369,6 +419,7 @@
           }
         }
         render();
+        sendState();
         localStorage.setItem('matchState', JSON.stringify(state));
       }
 
@@ -417,6 +468,7 @@
           state.deuceCount = prev.deuceCount;
           state.matchEnded = prev.matchEnded;
           render();
+          sendState();
           localStorage.setItem('matchState', JSON.stringify(state));
         }
       }
@@ -465,6 +517,7 @@
         
         const pointBtns = document.querySelectorAll('.btn-group:first-of-type button');
         pointBtns.forEach(btn => btn.disabled = state.matchEnded);
+        sendState();
         localStorage.setItem('matchState', JSON.stringify(state));
       }
     </script>
